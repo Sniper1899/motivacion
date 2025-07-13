@@ -94,9 +94,14 @@
         }
         #final-message {
             top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #fefce8; font-size: 2.5rem; text-align: center;
+            color: #fefce8; 
+            font-size: 1.75rem; /* Ajustado para el párrafo largo */
+            line-height: 1.6; /* Espaciado de línea */
+            text-align: center;
             opacity: 0; transition: opacity 2s ease-in-out 1s;
             font-weight: 700; text-shadow: 0 0 20px #fde047;
+            width: 90%;
+            max-width: 600px;
         }
         #initial-instructions, #challenge-modal {
              inset: 0; background-color: rgba(0, 0, 0, 0.85);
@@ -141,7 +146,7 @@
     <div id="game-world">
         <div id="character"></div>
         <div id="final-message">
-            Has construido tu propio universo, estrella por estrella.<br>Tu grandeza es inmensa.
+            Has creado un universo, estrella por estrella, con tu propia luz. A veces, en la inmensidad, es fácil sentirse pequeña, pero mira lo que has hecho. Cada respuesta, cada recuerdo y cada sueño que compartiste es un sol que ahora brilla con fuerza. Nunca olvides que llevas esa misma luz dentro de ti. Eres fuerte, eres valiosa y tu existencia hace del mundo un lugar inmensamente más brillante. Sigue adelante, sigue creando, sigue siendo tú.
         </div>
         <div id="guide-hint">¡Toca el planeta para empezar!</div>
     </div>
@@ -179,23 +184,19 @@
         const guideHint = document.getElementById('guide-hint');
 
         let planets = [], asteroids = [];
-        const totalPlanets = 10;
+        const totalPlanets = 5; // Cambiado de 10 a 5
         let currentPlanetIndex = 0;
         let characterSize = 40;
         let isInvincible = false, isGamePaused = false;
         let currentPlanet = null;
 
+        // Reducido a 5 desafíos
         const challenges = [
             { question: "Describe un momento en que superaste un miedo, por pequeño que fuera.", message: "Esa fortaleza ya está dentro de ti." },
             { question: "¿Cuál es un logro personal que a veces olvidas?", message: "Cada paso, grande o pequeño, es una victoria." },
             { question: "Nombra una cosa que te gusta de cómo eres.", message: "Eso te hace única y especial." },
-            { question: "Piensa en un obstáculo que venciste. ¿Qué aprendiste?", message: "Tus experiencias te han hecho más sabia." },
-            { question: "¿Quién es una persona a la que has ayudado?", message: "Tu capacidad de dar es inmensa." },
-            { question: "Menciona algo que has creado o construido con tus manos o tu mente.", message: "Eres una creadora de cosas maravillosas." },
             { question: "¿Cuál es una lección difícil que te hizo más fuerte?", message: "Has convertido las dificultades en poder." },
-            { question: "Nombra un lugar o recuerdo donde te sentiste completamente en paz.", message: "Esa paz vive dentro de ti, búscala." },
-            { question: "¿Qué te diría tu 'yo' de niña si te viera hoy?", message: "Estaría muy orgullosa de la mujer en que te has convertido." },
-            { question: "Para terminar, ¿qué es algo por lo que te sientes agradecida hoy?", message: "La gratitud ilumina hasta el rincón más oscuro." }
+            { question: "¿Qué te diría tu 'yo' de niña si te viera hoy?", message: "Estaría muy orgullosa de la mujer en que te has convertido." }
         ];
         
         function init() {
@@ -307,10 +308,10 @@
             planet.classList.add('discovered');
             planet.innerHTML = `🌟`;
             showMessage(planet.dataset.message);
-            characterSize += 5; // Un crecimiento más sutil pero constante
+            characterSize += 8; // Crecimiento más notable con 5 planetas
             updateCharacterStyle();
 
-            if (currentPlanetIndex === totalPlanets && planets.every(p => p.classList.contains('discovered'))) {
+            if (planets.length === totalPlanets && planets.every(p => p.classList.contains('discovered'))) {
                 setTimeout(() => {
                     finalMessage.style.opacity = '1';
                     character.style.opacity = '0';
