@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Universo Brillante</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Comfortaa', cursive;
+            overflow: hidden;
+        }
+        #game-world {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #00000c;
+            overflow: hidden;
+        }
+        #character {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #fefce8, #fde047);
+            border-radius: 50%;
+            box-shadow: 0 0 15px 5px #fde047, 0 0 30px 10px #fef08a;
+            transition: transform 0.1s linear, box-shadow 0.5s ease, width 0.5s ease, height 0.5s ease, opacity 2s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+        #character.hit { animation: flicker 0.5s ease-in-out; }
+        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .planet {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #8d99ae, #57606f);
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: all 1s ease;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: appear 1s forwards;
+        }
+        @keyframes appear {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .planet.discovered {
+            background: radial-gradient(circle, #fff, #ffd700);
+            box-shadow: 0 0 20px 10px #fde047, 0 0 40px 20px #fef08a;
+            transform: scale(1.1);
+        }
+        .asteroid {
+            position: absolute;
+            background-color: #8b5e34;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: fly-by linear infinite;
+            z-index: 50;
+        }
+        @keyframes fly-by {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 100px)); }
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: 0.8; } }
+
+        #message-box, #final-message, #initial-instructions, #challenge-modal, #guide-hint {
+            position: absolute;
+            z-index: 200;
+        }
+        #message-box {
+            top: 10%; left: 50%; transform: translateX(-50%);
+            padding: 1rem 2rem; background-color: rgba(0, 0, 0, 0.6);
+            color: white; border-radius: 12px; font-size: 1.25rem;
+            opacity: 0; transition: opacity 0.5s ease-in-out; text-align: center;
+        }
+        #final-message {
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fefce8; font-size: 2.5rem; text-align: center;
+            opacity: 0; transition: opacity 2s ease-in-out 1s;
+            font-weight: 700; text-shadow: 0 0 20px #fde047;
+        }
+        #initial-instructions, #challenge-modal {
+             inset: 0; background-color: rgba(0, 0, 0, 0.85);
+             display: flex; align-items: center; justify-content: center;
+        }
+        #challenge-modal {
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        #challenge-modal.visible {
+            opacity: 1; pointer-events: auto;
+        }
+        .challenge-box {
+            background-color: #111827; padding: 2rem; border-radius: 1rem;
+            text-align: center; color: white; border: 1px solid #fde047;
+            width: 90%; max-width: 500px;
+        }
+        #challenge-question { font-size: 1.5rem; line-height: 1.3; }
+        #challenge-input {
+            width: 100%; margin-top: 1.5rem; padding: 0.75rem;
+            border-radius: 8px; border: 1px solid #4b5563;
+            background-color: #1f2937; color: white; font-size: 1rem;
+        }
+        #challenge-submit {
+            margin-top: 1.5rem; background-color: #fde047; color: #111827;
+            font-weight: bold; padding: 0.75rem 1.5rem;
+            border-radius: 9999px; cursor: pointer; transition: background-color 0.2s;
+        }
+        #challenge-submit:hover { background-color: #fef08a; }
+        #guide-hint {
+            color: white; background: rgba(0,0,0,0.5); padding: 0.5rem 1rem;
+            border-radius: 8px; display: none;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 10px 5px rgba(253, 224, 71, 0); }
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div id="game-world">
+        <div id="character"></div>
+        <div id="final-message">
+            Has construido tu propio universo, estrella por estrella.<br>Tu grandeza es inmensa.
+        </div>
+        <div id="guide-hint">¡Toca el planeta para empezar!</div>
+    </div>
+
+    <div id="message-box"></div>
+
+    <div id="initial-instructions">
+        <div class="text-white text-center p-8 max-w-md mx-auto">
+            <h1 class="text-3xl mb-4">Un viaje por tu universo</h1>
+            <p class="mb-6">Guía tu luz y responde desde el corazón para crear una estrella a la vez. ¡Demuestra tu increíble fuerza interior!</p>
+            <button id="start-button" class="bg-yellow-400 text-gray-900 font-bold py-2 px-6 rounded-full hover:bg-yellow-300 transition-colors">Comenzar Viaje</button>
+            <p class="text-gray-400 mt-8 text-sm">Creado con mucho cariño por Antony</p>
+        </div>
+    </div>
+
+    <div id="challenge-modal">
+        <div class="challenge-box">
+            <h2 id="challenge-question"></h2>
+            <input type="text" id="challenge-input" placeholder="Escribe tu respuesta aquí...">
+            <button id="challenge-submit">Crear Estrella</button>
+        </div>
+    </div>
+
+    <script>
+        const world = document.getElementById('game-world');
+        const character = document.getElementById('character');
+        const messageBox = document.getElementById('message-box');
+        const finalMessage = document.getElementById('final-message');
+        const startButton = document.getElementById('start-button');
+        const initialInstructions = document.getElementById('initial-instructions');
+        const challengeModal = document.getElementById('challenge-modal');
+        const challengeQuestion = document.getElementById('challenge-question');
+        const challengeInput = document.getElementById('challenge-input');
+        const challengeSubmit = document.getElementById('challenge-submit');
+        const guideHint = document.getElementById('guide-hint');
+
+        let planets = [], asteroids = [];
+        const totalPlanets = 10;
+        let currentPlanetIndex = 0;
+        let characterSize = 40;
+        let isInvincible = false, isGamePaused = false;
+        let currentPlanet = null;
+
+        const challenges = [
+            { question: "Describe un momento en que superaste un miedo, por pequeño que fuera.", message: "Esa fortaleza ya está dentro de ti." },
+            { question: "¿Cuál es un logro personal que a veces olvidas?", message: "Cada paso, grande o pequeño, es una victoria." },
+            { question: "Nombra una cosa que te gusta de cómo eres.", message: "Eso te hace única y especial." },
+            { question: "Piensa en un obstáculo que venciste. ¿Qué aprendiste?", message: "Tus experiencias te han hecho más sabia." },
+            { question: "¿Quién es una persona a la que has ayudado?", message: "Tu capacidad de dar es inmensa." },
+            { question: "Menciona algo que has creado o construido con tus manos o tu mente.", message: "Eres una creadora de cosas maravillosas." },
+            { question: "¿Cuál es una lección difícil que te hizo más fuerte?", message: "Has convertido las dificultades en poder." },
+            { question: "Nombra un lugar o recuerdo donde te sentiste completamente en paz.", message: "Esa paz vive dentro de ti, búscala." },
+            { question: "¿Qué te diría tu 'yo' de niña si te viera hoy?", message: "Estaría muy orgullosa de la mujer en que te has convertido." },
+            { question: "Para terminar, ¿qué es algo por lo que te sientes agradecida hoy?", message: "La gratitud ilumina hasta el rincón más oscuro." }
+        ];
+        
+        function init() {
+            initialInstructions.style.display = 'none';
+            createStaticStars();
+            createAsteroids();
+            character.style.transform = `translate(${window.innerWidth/2 - 20}px, ${window.innerHeight/2 - 20}px)`;
+            
+            window.addEventListener('mousemove', moveCharacter);
+            window.addEventListener('touchmove', moveCharacter, { passive: true });
+            challengeSubmit.addEventListener('click', handleChallengeSubmit);
+
+            spawnNextPlanet(); // Llama para crear el primer planeta
+        }
+
+        function spawnNextPlanet() {
+            if (currentPlanetIndex >= totalPlanets) return;
+
+            const planet = document.createElement('div');
+            planet.className = 'planet';
+            planet.dataset.challengeIndex = currentPlanetIndex;
+            let pos, overlapping;
+            do {
+                overlapping = false;
+                pos = { top: Math.random() * (window.innerHeight - 200) + 100, left: Math.random() * (window.innerWidth - 200) + 100 };
+                for(const p of planets) {
+                    const pRect = p.getBoundingClientRect();
+                    const dist = Math.hypot(pRect.left - pos.left, pRect.top - pos.top);
+                    if (dist < 120) { overlapping = true; break; }
+                }
+            } while (overlapping);
+            planet.style.top = `${pos.top}px`;
+            planet.style.left = `${pos.left}px`;
+            planet.innerHTML = `🪐`;
+            world.appendChild(planet);
+            planets.push(planet);
+
+            // Mostrar la guía solo para el primer planeta
+            if (currentPlanetIndex === 0) {
+                guideHint.style.top = `${pos.top - 50}px`;
+                guideHint.style.left = `${pos.left}px`;
+                guideHint.style.display = 'block';
+            }
+            currentPlanetIndex++;
+        }
+
+        function moveCharacter(e) {
+            if (isGamePaused) return;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            character.style.transform = `translate(${x - character.offsetWidth / 2}px, ${y - character.offsetHeight / 2}px)`;
+            checkCollisions();
+        }
+
+        function checkCollisions() {
+            if (isInvincible || isGamePaused) return;
+            const charRect = character.getBoundingClientRect();
+
+            planets.forEach(planet => {
+                if (planet.classList.contains('discovered')) return;
+                if (isColliding(charRect, planet.getBoundingClientRect())) {
+                    const challengeIndex = parseInt(planet.dataset.challengeIndex);
+                    startChallenge(planet, challenges[challengeIndex]);
+                }
+            });
+
+            asteroids.forEach(asteroid => {
+                if (isColliding(charRect, asteroid.getBoundingClientRect())) {
+                    handleAsteroidHit();
+                }
+            });
+        }
+
+        function isColliding(rect1, rect2) {
+            const distance = Math.hypot(
+                rect1.x + rect1.width / 2 - (rect2.x + rect2.width / 2),
+                rect1.y + rect1.height / 2 - (rect2.y + rect2.height / 2)
+            );
+            return distance < (rect1.width / 2 + rect2.width / 2);
+        }
+        
+        function startChallenge(planet, challengeData) {
+            isGamePaused = true;
+            currentPlanet = planet;
+            currentPlanet.dataset.message = challengeData.message;
+            
+            challengeQuestion.textContent = challengeData.question;
+            challengeInput.value = '';
+            challengeModal.classList.add('visible');
+            challengeInput.focus();
+
+            // Ocultar la guía al iniciar el primer desafío
+            if (guideHint.style.display === 'block') {
+                guideHint.style.display = 'none';
+            }
+        }
+
+        function handleChallengeSubmit() {
+            if (challengeInput.value.trim() === '') {
+                showMessage("No dejes la respuesta en blanco. ¡Tu voz es importante!", 2500);
+                return;
+            }
+            challengeModal.classList.remove('visible');
+            discoverPlanet(currentPlanet);
+            setTimeout(() => { isGamePaused = false; }, 500);
+        }
+
+        function discoverPlanet(planet) {
+            planet.classList.add('discovered');
+            planet.innerHTML = `🌟`;
+            showMessage(planet.dataset.message);
+            characterSize += 5; // Un crecimiento más sutil pero constante
+            updateCharacterStyle();
+
+            if (currentPlanetIndex === totalPlanets && planets.every(p => p.classList.contains('discovered'))) {
+                setTimeout(() => {
+                    finalMessage.style.opacity = '1';
+                    character.style.opacity = '0';
+                }, 2000);
+            } else {
+                // Aparece el siguiente planeta después de un breve momento
+                setTimeout(spawnNextPlanet, 1500);
+            }
+        }
+
+        function handleAsteroidHit() {
+            isInvincible = true;
+            character.classList.add('hit');
+            showMessage("¡Un tropiezo! No pasa nada, sigues brillando.", 2000);
+            characterSize = Math.max(20, characterSize - 3);
+            updateCharacterStyle();
+            setTimeout(() => {
+                character.classList.remove('hit');
+                isInvincible = false;
+            }, 1000);
+        }
+        
+        function showMessage(text, duration = 3000) {
+            messageBox.textContent = text;
+            messageBox.style.opacity = '1';
+            setTimeout(() => { messageBox.style.opacity = '0'; }, duration);
+        }
+
+        function updateCharacterStyle() {
+            character.style.width = `${characterSize}px`;
+            character.style.height = `${characterSize}px`;
+            const newShadow = 15 + (characterSize - 40) / 2;
+            character.style.boxShadow = `0 0 ${newShadow}px 5px #fde047, 0 0 ${newShadow*2}px 10px #fef08a`;
+        }
+        
+        function createStaticStars() {
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 2 + 1}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                world.insertBefore(star, character);
+            }
+        }
+
+        function createAsteroids() {
+            for (let i = 0; i < 10; i++) {
+                const asteroid = document.createElement('div');
+                asteroid.className = 'asteroid';
+                const size = Math.random() * 20 + 15;
+                asteroid.style.width = `${size}px`;
+                asteroid.style.height = `${size}px`;
+                asteroid.style.top = `${Math.random() * 100}vh`;
+                asteroid.style.animationDuration = `${Math.random() * 10 + 8}s`;
+                asteroid.style.animationDelay = `${Math.random() * 8}s`;
+                world.appendChild(asteroid);
+                asteroids.push(asteroid);
+            }
+        }
+
+        startButton.addEventListener('click', init);
+    </script>
+</body>
+</html>
